@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Mini Microblog</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        background: linear-gradient(135deg, #1da1f2, #a18cd1, #fbc2eb);
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+      }
+      header {
+        background: #1da1f2;
+        color: white;
+        padding: 15px;
+        text-align: center;
+        font-size: 24px;
+        font-weight: bold;
+        border-bottom: 3px solid #0d8ddb;
+        letter-spacing: 1px;
+      }
+      .container {
+        width: 500px;
+        margin: 30px auto;
+        background: #ffffffd9;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+        animation: fadeIn 1s ease-in-out;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      textarea {
+        width: 100%;
+        height: 70px;
+        resize: none;
+        padding: 12px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: 0.3s;
+      }
+      textarea:focus {
+        border-color: #1da1f2;
+        outline: none;
+        box-shadow: 0 0 8px #1da1f299;
+      }
+      .counter {
+        font-size: 12px;
+        text-align: right;
+        margin-top: 5px;
+        color: #555;
+      }
+      button {
+        background: #1da1f2;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        margin-top: 10px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: bold;
+        transition: 0.3s;
+      }
+      button:hover {
+        background: #0d8ddb;
+        transform: scale(1.05);
+      }
+      .post {
+        border-bottom: 1px solid #ddd;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 12px;
+        transition: 0.3s;
+      }
+      .post:hover {
+        background: #f4f9ff;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+      }
+      .post strong {
+        font-size: 15px;
+      }
+      .actions {
+        margin-top: 8px;
+      }
+      .actions span {
+        margin-right: 15px;
+        cursor: pointer;
+        color: #555;
+        font-size: 14px;
+      }
+      .actions span:hover {
+        text-decoration: underline;
+      }
+      .timestamp {
+        font-size: 11px;
+        color: #777;
+        margin-top: 5px;
+      }
+      .user-switch {
+        margin-bottom: 15px;
+        font-size: 14px;
+      }
+      select {
+        padding: 6px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+      }
+
+      /* User specific color tags */
+      .Alice strong {
+        color: #e91e63;
+      }
+      .Bob strong {
+        color: #4caf50;
+      }
+      .Charlie strong {
+        color: #ff9800;
+      }
+
+      /* Heart animation */
+      .like-animate {
+        animation: pop 0.3s ease;
+      }
+      @keyframes pop {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.4);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <header>Mini Microblog</header>
+      <div class="container">
+        <div class="user-switch">
+          Logged in as:
+          <select id="currentUser">
+            <option value="Saffu">Alice</option>
+            <option value="Kalaichelvan">Bob</option>
+            <option value="Charlie">Charlie</option>
+          </select>
+        </div>
+        <textarea
+          id="postInput"
+          maxlength="280"
+          placeholder="What's happening?"
+        ></textarea>
+        <div class="counter" id="charCounter">280 characters left</div>
+        <button onclick="addPost()">Post</button>
+        <h3>Timeline</h3>
+        <div id="posts"></div>
+      </div>
+    </div>
+
+    <script>
+      let posts = [];
+      function updateCounter() {
+        let input = document.getElementById("postInput");
+        let counter = document.getElementById("charCounter");
+        counter.textContent = 280 - input.value.length + " characters left";
+      }
+      document
+        .getElementById("postInput")
+        .addEventListener("input", updateCounter);
+
+      function addPost() {
+        let input = document.getElementById("postInput");
+        let user = document.getElementById("currentUser").value;
+        let content = input.value.trim();
+        if (content) {
+          posts.unshift({
+            user,
+            content,
+            likes: 0,
+            time: new Date(),
+            id: Date.now(),
+          });
+          input.value = "";
+          updateCounter();
+          displayPosts();
+        }
+      }
+
+      function likePost(id) {
+        let post = posts.find((p) => p.id === id);
+        if (post) {
+          post.likes++;
+          displayPosts();
+          setTimeout(() => {
+            let el = document.getElementById("like-" + id);
+            if (el) el.classList.add("like-animate");
+            setTimeout(() => el && el.classList.remove("like-animate"), 300);
+          }, 50);
+        }
+      }
+
+      function deletePost(id) {
+        let user = document.getElementById("currentUser").value;
+        posts = posts.filter((p) => !(p.id === id && p.user === user));
+        displayPosts();
+      }
+
+      function displayPosts() {
+        let postsDiv = document.getElementById("posts");
+        postsDiv.innerHTML = "";
+        posts.forEach((post) => {
+          let postDiv = document.createElement("div");
+          postDiv.className = "post " + post.user;
+          postDiv.innerHTML = `
+          <strong>@${post.user}</strong>: ${post.content}
+          <div class="timestamp">${post.time.toLocaleString()}</div>
+          <div class="actions">
+            <span id="like-${post.id}" onclick="likePost(${post.id})">❤️ ${
+            post.likes
+          }</span>
+            ${
+              post.user === document.getElementById("currentUser").value
+                ? `<span onclick="deletePost(${post.id})">🗑️ Delete</span>`
+                : ""
+            }
+          </div>
+        `;
+          postsDiv.appendChild(postDiv);
+        });
+      }
+    </script>
+  </body>
+</html>
